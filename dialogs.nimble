@@ -1,8 +1,8 @@
 [Package]
 name          = "dialogs"
-version       = "0.1.0"
+version       = "1.0"
 author        = "Anonymous"
-description   = "New Nimble project for Nim"
+description   = "portable dialogs for Nim/Aporia"
 license       = "MIT"
 
 [Deps]

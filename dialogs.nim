@@ -15,6 +15,18 @@ when defined(Windows):
   import winlean, private/winaux, os
 
   type PWindow = pointer
+elif defined(macosx):
+  import glib2, gtk2
+  {.passL: "-framework AppKit".}
+
+  type
+    NSSavePanel {.importobjc: "NSSavePanel*", header: "<AppKit/AppKit.h>",
+        incompleteStruct.} = object
+    NSOpenPanel {.importobjc: "NSOpenPanel*", header: "<AppKit/AppKit.h>",
+        incompleteStruct.} = object
+
+  proc newOpenPanel: NSOpenPanel {.importobjc: "NSOpenPanel openPanel", nodecl.}
+  proc newSavePanel: NSSavePanel {.importobjc: "NSSavePanel savePanel", nodecl.}
 else:
   import glib2, gtk2
 
@@ -78,6 +90,24 @@ proc chooseFileToOpen*(window: PWindow, root: string = ""): string =
       result = $buf
     else:
       result = ""
+  elif defined(macosx):
+    {.emit: "NSAutoreleasePool* pool = [NSAutoreleasePool new];".}
+    let dialog = newOpenPanel()
+    let ctitle : cstring = "Open File"
+    var cres: cstring
+
+    {.emit: """
+    [`dialog` setCanChooseFiles:YES];
+    `dialog`.title = [NSString stringWithUTF8String: `ctitle`];
+    if ([`dialog` runModal] == NSOKButton && `dialog`.URLs.count > 0) {
+      `cres` = [`dialog`.URLs objectAtIndex: 0].path.UTF8String;
+    }
+    """.}
+    if not cres.isNil:
+      result = $cres
+    else:
+      result = ""
+    {.emit: "[pool drain];".}
   else:
     var chooser = file_chooser_dialog_new("Open File", window,
                 FILE_CHOOSER_ACTION_OPEN,
@@ -131,9 +161,34 @@ proc chooseFilesToOpen*(window: PWindow, root: string = ""): seq[string] =
           if buf[i] == '\0': break
         for i in 0..result.len-1: result[i] = os.joinPath(path, result[i])
       else:
-        # only one file selected --> gosh, what an ungly thing
+        # only one file selected --> gosh, what an ugly thing
         # the windows API is
         add(result, path)
+  elif defined(macosx):
+    {.emit: "NSAutoreleasePool* pool = [NSAutoreleasePool new];".}
+    let dialog = newOpenPanel()
+    let ctitle : cstring = "Open File"
+    var cres: array[100, cstring]
+    var count = 0
+
+    {.emit: """
+    [`dialog` setCanChooseFiles:YES];
+    [`dialog` setAllowsMultipleSelection:YES];
+    `dialog`.title = [NSString stringWithUTF8String: `ctitle`];
+    if ([`dialog` runModal] == NSOKButton && `dialog`.URLs.count > 0) {
+      `count` = `dialog`.URLs.count;
+      if (`count` > 100) {
+        `count` = 100;
+      }
+      for (int i = 0; i < `count`; i++) {
+        `cres`[i] = [`dialog`.URLs objectAtIndex: i].path.UTF8String;
+      }
+    }
+    """.}
+    result = @[]
+    for i in 0 .. <count:
+      result.add($cres[i])
+    {.emit: "[pool drain];".}
   else:
     var chooser = file_chooser_dialog_new("Open Files", window,
                 FILE_CHOOSER_ACTION_OPEN,
@@ -174,6 +229,24 @@ proc chooseFileToSave*(window: PWindow, root: string = ""): string =
       result = $buf
     else:
       result = ""
+  elif defined(macosx):
+    {.emit: "NSAutoreleasePool* pool = [NSAutoreleasePool new];".}
+    let dialog = newSavePanel()
+    let ctitle : cstring = "Save File"
+    var cres: cstring
+
+    {.emit: """
+    `dialog`.canCreateDirectories = YES;
+    `dialog`.title = [NSString stringWithUTF8String: `ctitle`];
+    if ([`dialog` runModal] == NSOKButton) {
+      `cres` = `dialog`.URL.path.UTF8String;
+    }
+    """.}
+    if not cres.isNil:
+      result = $cres
+    else:
+      result = ""
+    {.emit: "[pool drain];".}
   else:
     var chooser = file_chooser_dialog_new("Save File", window,
                 FILE_CHOOSER_ACTION_SAVE,

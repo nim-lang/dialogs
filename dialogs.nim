@@ -77,7 +77,7 @@ proc chooseFileToOpen*(window: PWindow, root: string = ""): string =
   when defined(Windows):
     var
       opf: TOPENFILENAME
-      buf: array [0..2047, char]
+      buf: array[0..2047, char]
     opf.lStructSize = sizeof(opf).int32
     if root.len > 0:
       opf.lpstrInitialDir = root
@@ -130,7 +130,7 @@ proc chooseFilesToOpen*(window: PWindow, root: string = ""): seq[string] =
   when defined(Windows):
     var
       opf: TOPENFILENAME
-      buf: array [0..2047*4, char]
+      buf: array[0..2047*4, char]
     opf.lStructSize = sizeof(opf).int32
     if root.len > 0:
       opf.lpstrInitialDir = root
@@ -216,7 +216,7 @@ proc chooseFileToSave*(window: PWindow, root: string = ""): string =
   when defined(Windows):
     var
       opf: TOPENFILENAME
-      buf: array [0..2047, char]
+      buf: array[0..2047, char]
     opf.lStructSize = sizeof(opf).int32
     if root.len > 0:
       opf.lpstrInitialDir = root
@@ -272,8 +272,8 @@ proc chooseDir*(window: PWindow, root: string = ""): string =
     var
       lpItemID: PItemIDList
       browseInfo: BrowseInfo
-      displayName: array [0..MAX_PATH, char]
-      tempPath: array [0..MAX_PATH, char]
+      displayName: array[0..MAX_PATH, char]
+      tempPath: array[0..MAX_PATH, char]
     result = ""
     #BrowseInfo.hwndOwner = Application.Handle
     browseInfo.pszDisplayName = displayName

@@ -83,11 +83,11 @@ proc chooseFileToOpen*(window: PWindow, root: string = ""): string =
       opf.lpstrInitialDir = root
     opf.lpstrFilter = "All Files\0*.*\0\0"
     opf.flags = OFN_FILEMUSTEXIST
-    opf.lpstrFile = buf
+    opf.lpstrFile = addr buf
     opf.nMaxFile = sizeof(buf).int32
     var res = getOpenFileName(addr(opf))
     if res != 0:
-      result = $buf
+      result = $(addr buf)
     else:
       result = ""
   elif defined(macosx):
@@ -136,7 +136,7 @@ proc chooseFilesToOpen*(window: PWindow, root: string = ""): seq[string] =
       opf.lpstrInitialDir = root
     opf.lpstrFilter = "All Files\0*.*\0\0"
     opf.flags = OFN_FILEMUSTEXIST or OFN_ALLOWMULTISELECT or OFN_EXPLORER
-    opf.lpstrFile = buf
+    opf.lpstrFile = addr buf
     opf.nMaxFile = sizeof(buf).int32
     var res = getOpenFileName(addr(opf))
     result = @[]
@@ -222,11 +222,11 @@ proc chooseFileToSave*(window: PWindow, root: string = ""): string =
       opf.lpstrInitialDir = root
     opf.lpstrFilter = "All Files\0*.*\0\0"
     opf.flags = OFN_OVERWRITEPROMPT
-    opf.lpstrFile = buf
+    opf.lpstrFile = addr buf
     opf.nMaxFile = sizeof(buf).int32
     var res = getSaveFileName(addr(opf))
     if res != 0:
-      result = $buf
+      result = $(addr buf)
     else:
       result = ""
   elif defined(macosx):
@@ -276,12 +276,12 @@ proc chooseDir*(window: PWindow, root: string = ""): string =
       tempPath: array[0..MAX_PATH, char]
     result = ""
     #BrowseInfo.hwndOwner = Application.Handle
-    browseInfo.pszDisplayName = displayName
+    browseInfo.pszDisplayName = addr displayName
     browseInfo.ulFlags = 1 #BIF_RETURNONLYFSDIRS
     lpItemID = shBrowseForFolder(addr(browseInfo))
     if lpItemId != nil:
-      discard shGetPathFromIDList(lpItemID, tempPath)
-      result = $tempPath
+      discard shGetPathFromIDList(lpItemID, addr tempPath)
+      result = $(addr tempPath)
       discard globalFreePtr(lpItemID)
   else:
     var chooser = file_chooser_dialog_new("Select Directory", window,

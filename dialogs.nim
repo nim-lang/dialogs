@@ -12,7 +12,7 @@
 ## builds on the GTK interface. On Windows, native dialogs are shown instead.
 
 when defined(Windows):
-  import winlean, private/winaux, os
+  import winlean, dialogs/private/winaux, os
 
   type PWindow = pointer
 elif defined(macosx):
